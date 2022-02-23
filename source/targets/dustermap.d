@@ -3,11 +3,10 @@ module targets.dustermap;
 import std.stdio;
 import std.conv;
 import std.bitmanip : to_le = nativeToLittleEndian;
-
-import core.stdc.stdio;
-import core.stdc.string;
-import cute_tiled;
-import util;
+import std.algorithm;
+import std.range;
+import std.conv;
+import std.format;
 
 import targets.base;
 
@@ -49,103 +48,89 @@ class DusterMapTarget : MapCompileTarget {
     }
 
     override void load_map(ubyte[] map_data) {
-        // load map
-        cute_tiled_map_t* map = cute_tiled_load_map_from_memory(cast(ubyte*) map_data, cast(int) map_data.length, null);
-        if (verbose)
-            writefln("  loaded map: %sx%s", map.width, map.height);
+        auto map = TiledMap.load(map_data);
 
-        cached_map.num_tiles = map.width * map.height;
+        if (verbose)
+            writefln("map: %s", map);
+
+        // make sure width and height match
         assert(map.width == map.height, "map width and height must match!");
+        cached_map.num_tiles = map.num_tiles;
         cached_map.board_size = map.width;
 
-        bool terrain_layer_found = false;
-        bool pawns_layer_found = false;
+        bool terrain_layer_found = map.layers.canFind!(x => x.name == "terrain");
+        bool pawns_layer_found = map.layers.canFind!(x => x.name == "pawns");
 
-        cute_tiled_layer_t* layer = map.layers;
-        while (layer) {
-            int* data = layer.data;
-            int data_count = layer.data_count;
+        assert(terrain_layer_found, "terrain layer not found!");
+        assert(pawns_layer_found, "pawns layer not found!");
 
-            // stuff and things
+        auto terrain_layer = map.layers.find!(x => x.name == "terrain").front;
+        // resize tiles data countainer
+        cached_map.tiles.length = cached_map.num_tiles;
+        assert(terrain_layer.data.length == map.num_tiles,
+            format("terrain layer tile count (%s) does not match map tile count (%s)",
+                terrain_layer.data.length, map.num_tiles));
 
-            // terrain
-            if (strcmp(layer.name.ptr, "terrain") == 0) {
-                terrain_layer_found = true;
+        // copy tile data from terrain layer
+        writefln("%s", terrain_layer.data);
+        for (int i = 0; i < map.num_tiles; i++) {
+            int tid = terrain_layer.data[i];
+            int tx = i % map.width;
+            int ty = i / map.width;
 
-                assert(data_count == cached_map.num_tiles,
-                    "map num tiles (based on w and h) did not match layer data count");
+            cached_map.tiles[i] = tid;
+            // writefln("tile %s: %s", i, tid);
 
-                // resize tiles data countainer
-                cached_map.tiles.length = cached_map.num_tiles;
+            // if (tid == 2) {
+            //     // obstacle
+            //     writefln("    obstacle tile (%d,%d): %d", tx, ty, tid);
+            // }
+        }
+        if (verbose)
+            writefln("  copied %s board tiles", map.num_tiles);
 
-                // copy tile data from terrain layer
-                for (int i = 0; i < data_count; i++) {
-                    int tile = data[i];
-                    int tx = i % map.width;
-                    int ty = i / map.width;
+        // spawn points
+        auto pawns_layer = map.layers.find!(x => x.name == "pawns").front;
+        int[NUM_TEAMS] team_pawn_count;
 
-                    cached_map.tiles[i] = tile;
-                    // if (tile == 2) {
-                    //     // obstacle
-                    //     printf("obstacle tile (%d,%d): %d \n", tx, ty, tile);
-                    // }
-                }
-                if (verbose)
-                    writefln("  copied %s board tiles", cached_map.num_tiles);
-            }
+        foreach (obj; pawns_layer.objects) {
+            if (verbose)
+                writefln("  checking obj: %s (%d)", obj.name, obj.id);
 
-            // spawn points
-            if ((strcmp(layer.name.ptr, "pawns") == 0) && layer.objects) {
-                pawns_layer_found = true;
+            // check if spawn
+            if (obj.type == "pawn" && obj.properties.length > 0) {
+                // add to spawn
+                int team_ix = -1;
+                int pawn_class = 0;
+                int pawn_level = 1;
 
-                // array of pawn count for each team
-                int[NUM_TEAMS] team_pawn_count;
-
-                cute_tiled_object_t* obj = layer.objects;
-                while (obj) {
-                    // printf("checking obj: %s (%d)\n", obj.name.ptr, obj.id);
-
-                    // check if spawn
-                    if ((strcmp(obj.type.ptr, "pawn") == 0) && obj.property_count > 0) {
-                        // add to spawn
-                        int team_ix = -1;
-                        int pawn_class = 0;
-                        int pawn_level = 1;
-
-                        for (int i = 0; i < obj.property_count; i++) {
-                            cute_tiled_property_t* prop = &obj.properties[i];
-                            if (strcmp(prop.name.ptr, "team") == 0) {
-                                team_ix = prop.data.integer;
-                            }
-                            if (strcmp(prop.name.ptr, "class") == 0) {
-                                pawn_class = prop.data.integer;
-                            }
-                            if (strcmp(prop.name.ptr, "level") == 0) {
-                                pawn_level = prop.data.integer;
-                            }
-                        }
-
-                        if (team_ix >= 0) {
-                            // valid, add
-
-                            // get next open pawn slot using team counts
-                            int pawn_ix = team_pawn_count[team_ix];
-                            // increment pawn slot number
-                            team_pawn_count[team_ix]++;
-
-                            auto spawn = PawnSpawn(team_ix, pawn_ix, pawn_class,
-                                pawn_level, cast(int) obj.x, cast(int) obj.y);
-                            cached_map.spawns ~= spawn;
-                            if (verbose)
-                                writefln("  pawn: %s", spawn);
-                        }
+                foreach (prop; obj.properties) {
+                    if (prop.name == "team") {
+                        team_ix = prop.value.to!int;
                     }
+                    if (prop.name == "class") {
+                        pawn_class = prop.value.to!int;
+                    }
+                    if (prop.name == "level") {
+                        pawn_level = prop.value.to!int;
+                    }
+                }
 
-                    obj = obj.next;
+                if (team_ix >= 0) {
+                    // valid, add
+
+                    // get next open pawn slot using team counts
+                    int pawn_ix = team_pawn_count[team_ix];
+                    // increment pawn slot number
+                    team_pawn_count[team_ix]++;
+
+                    auto spawn = PawnSpawn(team_ix, pawn_ix, pawn_class,
+                        pawn_level, cast(int) obj.x, cast(int) obj.y);
+                    cached_map.spawns ~= spawn;
+                    if (verbose)
+                        writefln("    pawn: %s", spawn);
                 }
             }
-
-            layer = layer.next;
         }
     }
 

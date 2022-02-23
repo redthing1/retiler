@@ -15,6 +15,7 @@ struct TiledMap {
     alias Properties = Property[];
 
     struct Object {
+        int id;
         string name;
         string type;
         Properties properties;
@@ -131,7 +132,8 @@ struct TiledMap {
                 // preallocate
                 tlayer.data.length = data_count;
                 for (int i = 0; i < data_count; i++) {
-                    tlayer.data ~= layer.data[i];
+                    auto tid = layer.data[i];
+                    tlayer.data[i] = tid;
                 }
                 tlayer.type = Layer.Type.Tile;
             } else if (layer.objects) {
@@ -145,6 +147,7 @@ struct TiledMap {
                     auto obj_type = obj.type.ptr.to!string;
 
                     Object tobj;
+                    tobj.id = obj.id;
                     tobj.name = obj_name;
                     tobj.type = obj_type;
                     tobj.x = obj.x;

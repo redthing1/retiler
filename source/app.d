@@ -50,9 +50,6 @@ int main(string[] args) {
 		writefln("running target[%s] map loader", target.name);
 	target.load_map(input_map_data);
 
-	auto tool_load = TiledMap.load(input_map_data);
-	writefln("loaded map: %s", tool_load);
-
 	// compile map with target
 	if (verbose)
 		writefln("compiling map with target[%s]", target.name);
