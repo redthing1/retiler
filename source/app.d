@@ -8,6 +8,7 @@ import mapload;
 import targets.base;
 import targets.dummy;
 import targets.dustermap;
+import targets.gbamap;
 
 int main(string[] args) {
 	auto a = new Program("retiler", "0.1").summary("tiled map compiler")
@@ -22,6 +23,7 @@ int main(string[] args) {
 	MapCompileTarget[string] targets_table = [
 		"dummy": new DummyMapTarget(),
 		"duster": new DusterMapTarget(),
+		"gbamap": new GbaMapTarget(),
 	];
 
 	auto in_file = a.arg("input");
@@ -35,7 +37,7 @@ int main(string[] args) {
 	auto input_map_data = cast(ubyte[]) std.file.read(in_file);
 
 	if (selected_target !in targets_table) {
-		writefln("unknown target: ", selected_target);
+		writefln("unknown target: %s", selected_target);
 		return 1;
 	}
 
