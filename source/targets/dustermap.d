@@ -9,7 +9,7 @@ import core.stdc.string;
 import cute_tiled;
 import util;
 
-import targets.target;
+import targets.base;
 
 class DusterMapTarget : MapCompileTarget {
     override @property string name() {
@@ -147,34 +147,34 @@ class DusterMapTarget : MapCompileTarget {
     }
 
     override ubyte[] compile_map() {
-        ubyte[] binmap;
+        ubyte[] bin;
 
         // magic header
         uint magic_header = 0xD0570000;
-        binmap ~= magic_header.to_le;
+        bin ~= magic_header.to_le;
 
         // board size
-        binmap ~= cached_map.board_size.to_le;
+        bin ~= cached_map.board_size.to_le;
 
         // tile data
-        binmap ~= cached_map.num_tiles.to_le;
+        bin ~= cached_map.num_tiles.to_le;
         for (int i = 0; i < cached_map.num_tiles; i++) {
-            binmap ~= cached_map.tiles[i].to_le;
+            bin ~= cached_map.tiles[i].to_le;
         }
 
         // pawn spawn data
-        binmap ~= (cast(int) cached_map.spawns.length).to_le;
+        bin ~= (cast(int) cached_map.spawns.length).to_le;
         for (int i = 0; i < cached_map.spawns.length; i++) {
             PawnSpawn spawn = cached_map.spawns[i];
 
-            binmap ~= spawn.team.to_le;
-            binmap ~= spawn.pawn.to_le;
-            binmap ~= spawn.pclass.to_le;
-            binmap ~= spawn.level.to_le;
-            binmap ~= spawn.tx.to_le;
-            binmap ~= spawn.ty.to_le;
+            bin ~= spawn.team.to_le;
+            bin ~= spawn.pawn.to_le;
+            bin ~= spawn.pclass.to_le;
+            bin ~= spawn.level.to_le;
+            bin ~= spawn.tx.to_le;
+            bin ~= spawn.ty.to_le;
         }
 
-        return binmap;
+        return bin;
     }
 }

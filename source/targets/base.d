@@ -1,4 +1,10 @@
-module targets.target;
+module targets.base;
+
+public {
+    import std.stdio;
+    import util;
+    import cute_tiled;
+}
 
 class MapCompileTarget {
     abstract @property string name();
