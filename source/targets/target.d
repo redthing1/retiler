@@ -1,8 +1,10 @@
 module targets.target;
 
 class MapCompileTarget {
-    @property abstract string name();
-    @property abstract string description();
+    abstract @property string name();
+    abstract @property string description();
+
+    public bool verbose = false;
 
     abstract void load_map(ubyte[] map_data);
     abstract ubyte[] compile_map();
