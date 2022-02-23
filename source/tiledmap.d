@@ -1,4 +1,4 @@
-module mapload;
+module tiledmap;
 
 import util;
 import cute_tiled;

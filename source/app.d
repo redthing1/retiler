@@ -3,7 +3,7 @@ import std.file;
 import std.format;
 import commandr;
 
-import mapload;
+import tiledmap;
 
 import targets.base;
 import targets.dummy;
