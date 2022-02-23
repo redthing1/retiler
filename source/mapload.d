@@ -13,6 +13,17 @@ struct TiledMap {
     }
 
     alias Properties = Property[];
+
+    struct Object {
+        string name;
+        string type;
+        Properties properties;
+        float x;
+        float y;
+        float width;
+        float height;
+    }
+
     struct Layer {
         enum Type {
             Unknown,
@@ -30,6 +41,8 @@ struct TiledMap {
         string name;
         /** tile data */
         int[] data;
+        /** object data */
+        Object[] objects;
         /** layer properties */
         Properties properties;
     }
@@ -123,6 +136,33 @@ struct TiledMap {
                 tlayer.type = Layer.Type.Tile;
             } else if (layer.objects) {
                 tlayer.type = Layer.Type.Object;
+
+                // look at objects
+                cute_tiled_object_t* obj = layer.objects;
+                while (obj) {
+                    // object basic
+                    auto obj_name = obj.name.ptr.to!string;
+                    auto obj_type = obj.type.ptr.to!string;
+
+                    Object tobj;
+                    tobj.name = obj_name;
+                    tobj.type = obj_type;
+                    tobj.x = obj.x;
+                    tobj.y = obj.y;
+                    tobj.width = obj.width;
+                    tobj.height = obj.height;
+
+                    // object properties
+                    for (int i = 0; i < obj.property_count; i++) {
+                        tobj.properties ~= convert_cute_property(&obj.properties[i]);
+                    }
+
+                    // add to object list
+                    tlayer.objects ~= tobj;
+
+                    // next
+                    obj = obj.next;
+                }
             } else {
                 tlayer.type = Layer.Type.Unknown;
             }
