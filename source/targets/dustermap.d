@@ -51,7 +51,8 @@ class DusterMapTarget : MapCompileTarget {
     override void load_map(ubyte[] map_data) {
         // load map
         cute_tiled_map_t* map = cute_tiled_load_map_from_memory(cast(ubyte*) map_data, cast(int) map_data.length, null);
-        writefln("  loaded map: %sx%s", map.width, map.height);
+        if (verbose)
+            writefln("  loaded map: %sx%s", map.width, map.height);
 
         cached_map.num_tiles = map.width * map.height;
         assert(map.width == map.height, "map width and height must match!");
@@ -89,7 +90,8 @@ class DusterMapTarget : MapCompileTarget {
                     //     printf("obstacle tile (%d,%d): %d \n", tx, ty, tile);
                     // }
                 }
-                writefln("  copied %s board tiles", cached_map.num_tiles);
+                if (verbose)
+                    writefln("  copied %s board tiles", cached_map.num_tiles);
             }
 
             // spawn points
@@ -134,7 +136,8 @@ class DusterMapTarget : MapCompileTarget {
                             auto spawn = PawnSpawn(team_ix, pawn_ix, pawn_class,
                                 pawn_level, cast(int) obj.x, cast(int) obj.y);
                             cached_map.spawns ~= spawn;
-                            writefln("  pawn: %s", spawn);
+                            if (verbose)
+                                writefln("  pawn: %s", spawn);
                         }
                     }
 

@@ -4,6 +4,7 @@ public {
     import std.stdio;
     import util;
     import cute_tiled;
+    import mapload;
 }
 
 class MapCompileTarget {

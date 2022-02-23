@@ -14,10 +14,6 @@ class DummyMapTarget : MapCompileTarget {
     override void load_map(ubyte[] map_data) {
         // load map
         cute_tiled_map_t* map = cute_tiled_load_map_from_memory(cast(ubyte*) map_data, cast(int) map_data.length, null);
-        writefln("  loaded map: %sx%s", map.width, map.height);
-
-        assert(map.width == map.height, "map width and height must match!");
-
         writefln("  map size: %sx%s (%s)", map.width, map.height, map.width * map.height);
 
         auto num_layers = 0;
