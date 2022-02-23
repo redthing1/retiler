@@ -48,8 +48,21 @@ struct TiledMap {
         Properties properties;
     }
 
+    struct Tileset {
+        int firstgid;
+        string name;
+        string image_path;
+        int image_width;
+        int image_height;
+        int tile_count;
+        int tile_width;
+        int tile_height;
+
+    }
+
     cute_tiled_map_t cute_map;
     cute_tiled_layer_t[] cute_layers;
+    cute_tiled_tileset_t[] cute_tilesets;
 
     int num_layers;
     int width;
@@ -58,6 +71,7 @@ struct TiledMap {
     Properties properties;
 
     Layer[] layers;
+    Tileset[] tilesets;
 
     private static Property convert_cute_property(cute_tiled_property_t* prop) {
         auto prop_name = prop.name.ptr.to!string;
@@ -100,6 +114,7 @@ struct TiledMap {
             tmap.properties ~= convert_cute_property(&map.properties[i]);
         }
 
+        // handle map layers
         auto num_layers = 0;
         cute_tiled_layer_t* layer = map.layers;
         while (layer) {
@@ -178,6 +193,31 @@ struct TiledMap {
         // writefln("  map layers: %s", num_layers);
         tmap.num_layers = num_layers;
 
+        // handle map tilesets
+        auto num_tilesets = 0;
+        cute_tiled_tileset_t* tileset = map.tilesets;
+        while (tileset) {
+            // found a tileset
+            num_tilesets++;
+
+            Tileset tset;
+            tset.firstgid = tileset.firstgid;
+            tset.name = tileset.name.ptr.to!string;
+            tset.image_path = tileset.image.ptr.to!string;
+            tset.image_width = tileset.imagewidth;
+            tset.image_height = tileset.imageheight;
+            tset.tile_count = tileset.tilecount;
+            tset.tile_width = tileset.tilewidth;
+            tset.tile_height = tileset.tileheight;
+
+            // add to tileset list
+            tmap.cute_tilesets ~= *tileset;
+            tmap.tilesets ~= tset;
+
+            // next
+            tileset = tileset.next;
+        }
+
         tmap.cute_map = *map;
 
         return tmap;
@@ -191,5 +231,19 @@ struct TiledMap {
         int index = y * width + x;
         auto data = layers[layer].data;
         return data[index];
+    }
+
+    struct TileFlip {
+        bool hflip;
+        bool vflip;
+        bool dflip;
+    }
+
+    TileFlip get_tile_flip(int tid) {
+        TileFlip ret;
+        ret.hflip = !!(tid & CUTE_TILED_FLIPPED_HORIZONTALLY_FLAG);
+        ret.vflip = !!(tid & CUTE_TILED_FLIPPED_VERTICALLY_FLAG);
+        ret.dflip = !!(tid & CUTE_TILED_FLIPPED_DIAGONALLY_FLAG);
+        return ret;
     }
 }
