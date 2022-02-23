@@ -3,7 +3,6 @@ description "super cool tiled map builder"
 authors "redthing1"
 copyright "Copyright © 2022, redthing1"
 license "proprietary"
-
+dependency "commandr" version="~>0.2.0"
 lflags "$PACKAGE_DIR/cute_tiled/libcute_tiled.a"
-
 preGenerateCommands "cd cute_tiled && make"

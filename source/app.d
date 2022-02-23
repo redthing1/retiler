@@ -1,22 +1,25 @@
 import std.stdio;
 import std.file;
+import std.format;
+import commandr;
 
-import dustermap;
+import targets.dustermap;
 
 int main(string[] args) {
-	writeln("duster-mapc map compiler");
-	if (args.length < 3) {
-		writeln("usage: duster-mapc <in_map> <out_bin>");
-		return 1;
-	}
+	auto a = new Program("retiler", "0.1").summary("tiled map compiler")
+		.author("redthing1")
+		.add(new Argument("input", "path to tiled map file (.json)"))
+		.add(new Argument("output", "path to output compiled map (.bin)"))
+		.parse(args);
 
-	string in_fn = args[1];
-	string ou_fn = args[2];
+	auto in_file = a.arg("input");
+	auto ou_file = a.arg("output");
 
-	DusterMap parsed_map = parse_map_file(in_fn);
+	auto input_map_data = cast(ubyte[]) std.file.read(in_file);
+	DusterMap parsed_map = parse_map_file(input_map_data);
 	ubyte[] binmap = compile_duster_map(parsed_map);
 
-	std.file.write(ou_fn, binmap);
+	std.file.write(ou_file, binmap);
 
 	return 0;
 }

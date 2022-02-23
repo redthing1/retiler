@@ -1,4 +1,4 @@
-module dustermap;
+module targets.dustermap;
 
 import std.stdio;
 import std.conv;
@@ -23,7 +23,7 @@ struct PawnSpawn {
         import std.string : format;
 
         return format("(team: %s, pawn: %s, class: %s, level: %s, pos: (%s, %s)",
-                team, pawn, pclass, level, tx, ty);
+            team, pawn, pclass, level, tx, ty);
     }
 }
 
@@ -35,11 +35,11 @@ struct DusterMap {
     PawnSpawn[] spawns;
 }
 
-DusterMap parse_map_file(string map_file) {
+DusterMap parse_map_file(ubyte[] map_data) {
     DusterMap cmap;
 
     // load map
-    cute_tiled_map_t* map = cute_tiled_load_map_from_file(map_file.c_str(), null);
+    cute_tiled_map_t* map = cute_tiled_load_map_from_memory(cast(ubyte*) map_data, cast(int) map_data.length, null);
     writefln("  loaded map: %sx%s", map.width, map.height);
 
     cmap.num_tiles = map.width * map.height;
@@ -61,7 +61,7 @@ DusterMap parse_map_file(string map_file) {
             terrain_layer_found = true;
 
             assert(data_count == cmap.num_tiles,
-                    "map num tiles (based on w and h) did not match layer data count");
+                "map num tiles (based on w and h) did not match layer data count");
 
             // resize tiles data countainer
             cmap.tiles.length = cmap.num_tiles;
@@ -121,7 +121,7 @@ DusterMap parse_map_file(string map_file) {
                         team_pawn_count[team_ix]++;
 
                         auto spawn = PawnSpawn(team_ix, pawn_ix, pawn_class,
-                                pawn_level, cast(int) obj.x, cast(int) obj.y);
+                            pawn_level, cast(int) obj.x, cast(int) obj.y);
                         cmap.spawns ~= spawn;
                         writefln("  pawn: %s", spawn);
                     }
