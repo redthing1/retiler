@@ -390,8 +390,19 @@
  "nextlayerid":3,
  "nextobjectid":17,
  "orientation":"orthogonal",
+ "properties":[
+        {
+         "name":"bean",
+         "type":"int",
+         "value":6
+        }, 
+        {
+         "name":"drug",
+         "type":"string",
+         "value":"weed"
+        }],
  "renderorder":"right-down",
- "tiledversion":"1.8.1",
+ "tiledversion":"1.8.2",
  "tileheight":8,
  "tilesets":[
         {

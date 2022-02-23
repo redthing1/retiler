@@ -197,7 +197,7 @@ struct cute_tiled_property_t
         int integer;
         int boolean;
         float floating;
-        cute_tiled_string_t string;
+        cute_tiled_string_t _string;
         cute_tiled_string_t file;
         int color;
     }
